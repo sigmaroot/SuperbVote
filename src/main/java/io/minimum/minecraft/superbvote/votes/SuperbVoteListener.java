@@ -95,8 +95,8 @@ public class SuperbVoteListener implements Listener {
                         reward.broadcastVoteWrongWorld(vote, !queued);
                     }
 
-                    SuperbVote.getPlugin().getLogger().log(Level.WARNING, "Vote from " + vote.getName() + " queued because he is online in a disabled world");
-                    processVote(vote, broadcast, true, queued);
+                    SuperbVote.getPlugin().getLogger().log(Level.WARNING, "Vote from " + vote.getName() + " queued to be run later (online in disabled world)");
+                    SuperbVote.getPlugin().getQueuedVotes().addVote(vote);
                 }
                 break;
             case QUEUE_VOTE:
