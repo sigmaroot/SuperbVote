@@ -147,12 +147,12 @@ public class SuperbVoteConfiguration {
     }
     
     public boolean matchesDisabledWorld(String worldName) {
-    	List<String> disabledWorlds = configuration.getStringList("disabledWorlds");
-    	for (String world : disabledWorlds) {
-			if (world.equalsIgnoreCase(worldName)) {
-				return true;
-			}
-		}
+        List<String> disabledWorlds = configuration.getStringList("disabledWorlds");
+        for (String world : disabledWorlds) {
+            if (world.equalsIgnoreCase(worldName)) {
+                return true;
+            }
+        }
         return false;
     }
 

@@ -66,34 +66,36 @@ public class SuperbVoteListener implements Listener {
 
         switch (preVoteEvent.getResult()) {
             case PROCESS_VOTE:
-            	boolean disabledWorld = false;
+                boolean disabledWorld = false;
                 if (preVoteEvent.getVoteRewards().isEmpty()) {
                     throw new RuntimeException("No vote reward found for '" + vote + "'");
                 }
-                
+
                 Player onlinePlayer = Bukkit.getPlayer(vote.getUuid());
                 if (onlinePlayer != null) {
-	                if (SuperbVote.getPlugin().getConfiguration().matchesDisabledWorld(onlinePlayer.getWorld().getName())) {
-	                	disabledWorld = true;
-	                }
+                    if (SuperbVote.getPlugin().getConfiguration().matchesDisabledWorld(onlinePlayer.getWorld().getName())) {
+                        disabledWorld = true;
+                    }
                 }
-                
+
                 if (!disabledWorld) {
-                	if (!vote.isFakeVote() || SuperbVote.getPlugin().getConfig().getBoolean("votes.process-fake-votes")) {
-                		SuperbVote.getPlugin().getVoteStorage().issueVote(vote);
-                	}
-                	
+                    if (!vote.isFakeVote() || SuperbVote.getPlugin().getConfig().getBoolean("votes.process-fake-votes")) {
+                        SuperbVote.getPlugin().getVoteStorage().issueVote(vote);
+                    }
+
                     for (VoteReward reward : preVoteEvent.getVoteRewards()) {
                         reward.broadcastVote(vote, !queued && SuperbVote.getPlugin().getConfig().getBoolean("broadcast.message-player"),
-                    	        broadcast && !queued);
+                                broadcast && !queued);
                     }
-                    
-                    Bukkit.getScheduler().runTask(SuperbVote.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new SuperbVoteEvent(vote, preVoteEvent.getVoteRewards())));
+
+                    Bukkit.getScheduler().runTask(SuperbVote.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new SuperbVoteEvent(vote,
+                            preVoteEvent.getVoteRewards())));
                 } else {
                     for (VoteReward reward : preVoteEvent.getVoteRewards()) {
                         reward.broadcastVoteWrongWorld(vote, !queued);
                     }
-                    
+
+                    SuperbVote.getPlugin().getLogger().log(Level.WARNING, "Vote from " + vote.getName() + " queued because he is online in a disabled world");
                     processVote(vote, broadcast, true, queued);
                 }
                 break;

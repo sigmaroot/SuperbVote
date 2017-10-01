@@ -26,17 +26,17 @@ public class VoteReward {
             if (playerMessage != null && player == onlinePlayer && playerAnnounce) {
                 playerMessage.sendAsBroadcast(player, vote);
             }
-	    if (broadcastMessage != null && broadcast) {
+        if (broadcastMessage != null && broadcast) {
                 broadcastMessage.sendAsBroadcast(player, vote);
             }
         }
     }
-    
+
     public void broadcastVoteWrongWorld(Vote vote, boolean playerAnnounce) {
         Player onlinePlayer = Bukkit.getPlayer(vote.getUuid());
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (playerWrongWorldMessage != null && player == onlinePlayer && playerAnnounce) {
-            	playerWrongWorldMessage.sendAsBroadcast(player, vote);
+                playerWrongWorldMessage.sendAsBroadcast(player, vote);
             }
         }
     }
