@@ -9,6 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.Date;
@@ -65,20 +66,36 @@ public class SuperbVoteListener implements Listener {
 
         switch (preVoteEvent.getResult()) {
             case PROCESS_VOTE:
+            	boolean disabledWorld = false;
                 if (preVoteEvent.getVoteRewards().isEmpty()) {
                     throw new RuntimeException("No vote reward found for '" + vote + "'");
                 }
-
-                if (!vote.isFakeVote() || SuperbVote.getPlugin().getConfig().getBoolean("votes.process-fake-votes")) {
-                    SuperbVote.getPlugin().getVoteStorage().issueVote(vote);
+                
+                Player onlinePlayer = Bukkit.getPlayer(vote.getUuid());
+                if (onlinePlayer != null) {
+	                if (SuperbVote.getPlugin().getConfiguration().matchesDisabledWorld(onlinePlayer.getWorld().getName())) {
+	                	disabledWorld = true;
+	                }
                 }
-
-                for (VoteReward reward : preVoteEvent.getVoteRewards()) {
-                    reward.broadcastVote(vote, !queued && SuperbVote.getPlugin().getConfig().getBoolean("broadcast.message-player"),
-                            broadcast && !queued);
+                
+                if (!disabledWorld) {
+                	if (!vote.isFakeVote() || SuperbVote.getPlugin().getConfig().getBoolean("votes.process-fake-votes")) {
+                		SuperbVote.getPlugin().getVoteStorage().issueVote(vote);
+                	}
+                	
+                    for (VoteReward reward : preVoteEvent.getVoteRewards()) {
+                        reward.broadcastVote(vote, !queued && SuperbVote.getPlugin().getConfig().getBoolean("broadcast.message-player"),
+                    	        broadcast && !queued);
+                    }
+                    
+                    Bukkit.getScheduler().runTask(SuperbVote.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new SuperbVoteEvent(vote, preVoteEvent.getVoteRewards())));
+                } else {
+                    for (VoteReward reward : preVoteEvent.getVoteRewards()) {
+                        reward.broadcastVoteWrongWorld(vote, !queued);
+                    }
+                    
+                    processVote(vote, broadcast, true, queued);
                 }
-
-                Bukkit.getScheduler().runTask(SuperbVote.getPlugin(), () -> Bukkit.getPluginManager().callEvent(new SuperbVoteEvent(vote, preVoteEvent.getVoteRewards())));
                 break;
             case QUEUE_VOTE:
                 SuperbVote.getPlugin().getLogger().log(Level.WARNING, "Queuing vote from " + vote.getName() + " to be run later");
@@ -110,6 +127,20 @@ public class SuperbVoteListener implements Listener {
                     event.getPlayer().hasPermission("superbvote.notify")) {
                 SuperbVote.getPlugin().getConfiguration().getReminderMessage().sendAsReminder(event.getPlayer());
             }
+        });
+    }
+    
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        Bukkit.getScheduler().runTaskAsynchronously(SuperbVote.getPlugin(), () -> {
+            // Update names in MySQL, if it is being used.
+            if (SuperbVote.getPlugin().getVoteStorage() instanceof MysqlVoteStorage) {
+                ((MysqlVoteStorage) SuperbVote.getPlugin().getVoteStorage()).updateName(event.getPlayer());
+            }
+
+            // Process queued votes.
+            List<Vote> votes = SuperbVote.getPlugin().getQueuedVotes().getAndRemoveVotes(event.getPlayer().getUniqueId());
+            votes.forEach(v -> processVote(v, false, false, true));
         });
     }
 }
