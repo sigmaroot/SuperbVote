@@ -38,7 +38,7 @@ rewards:
     commands:
     - give %player% diamond 4
     player-message: "&aThanks for meeting nearly impossible conditions, you have been rewarded with 4 diamonds and $1000."
-    player-wrong-world-message: "&cThanks for voting for us on %service%, your vote will be processed when you are in an enabled World next time!"
+    player-wrong-world-message: "&cThanks for voting for us on %service%, your vote will be processed when you are in an enabled world next time!"
     broadcast-message: "&a%player% got really lucky and was rewarded with 4 diamonds and $1000!"
   # Default rewards are defined by having no preconditions. Place it at the bottom of the config.
   - if: {}
